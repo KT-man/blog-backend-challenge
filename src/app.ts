@@ -1,20 +1,30 @@
 import 'reflect-metadata';
-import Fastify from 'fastify';
+import Fastify, { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import 'dotenv/config';
 import postgres from '@fastify/postgres';
-import userRoutes from './routes/userRoutes';
+import getAllUsers from './routes/userRoutes/getAllUsers.ts';
+import createUser from './routes/userRoutes/createUser.ts';
 
 /** Create new fastify instance  */
 const fastify = Fastify({});
 
 /** Register plugins into fastify instance */
+/** Register DB to instance */
 fastify.register((instance, opts, done) => {
-  /** Register DB to instance */
   instance.register(postgres, { connectionString: process.env.DB_URL });
-  userRoutes(instance);
-  /** Register routes to instance */
+
   done();
 });
+
+/** Register user routes into fastify instance */
+fastify.register(
+  (instance, opts, done) => {
+    instance.register(getAllUsers);
+    instance.register(createUser);
+    done();
+  },
+  { prefix: '/users' }
+);
 
 /** Test PG connection */
 fastify.ready().then(
@@ -25,10 +35,6 @@ fastify.ready().then(
     console.log('Error connecting to the database', err);
   }
 );
-
-fastify.get('/testPing', function (request, response) {
-  response.send({ hello: 'world' });
-});
 
 const start = async () => {
   try {
