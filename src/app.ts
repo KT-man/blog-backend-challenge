@@ -4,6 +4,9 @@ import 'dotenv/config';
 import postgres from '@fastify/postgres';
 import getAllUsers from './routes/userRoutes/getAllUsers.ts';
 import createUser from './routes/userRoutes/createUser.ts';
+import AppDataSource from './database/appDataSource.ts';
+import seedUser from './routes/userRoutes/seedUser.ts';
+import { runSeeders } from 'typeorm-extension';
 
 /** Create new fastify instance  */
 const fastify = Fastify({});
@@ -21,6 +24,7 @@ fastify.register(
   (instance, opts, done) => {
     instance.register(getAllUsers);
     instance.register(createUser);
+    instance.register(seedUser);
     done();
   },
   { prefix: '/users' }
@@ -38,6 +42,10 @@ fastify.ready().then(
 
 const start = async () => {
   try {
+    await AppDataSource.initialize();
+
+    await runSeeders(AppDataSource);
+
     await fastify.listen({ port: 8001 }, (err, address) => {});
   } catch (err) {
     fastify.log.error(err);

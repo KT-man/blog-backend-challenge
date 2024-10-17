@@ -1,6 +1,11 @@
-import { DataSource } from 'typeorm';
+import { DataSource, DataSourceOptions } from 'typeorm';
+import { SeederOptions } from 'typeorm-extension';
+import { User } from './entity/users.entity.ts';
+import { Post } from './entity/posts.entity.ts';
+import UserSeeder from './seeds/user.seeder.ts';
+import SetUserFactory from './factories/user.factory.ts';
 
-const AppDataSource = new DataSource({
+const options: DataSourceOptions & SeederOptions = {
   type: 'postgres',
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT),
@@ -9,9 +14,15 @@ const AppDataSource = new DataSource({
   database: process.env.DB_NAME,
   synchronize: true,
   logging: true,
-  entities: [__dirname + '/entity/*{.js,.ts}'],
+  entities: [User, Post],
   subscribers: [],
+  // To update Migrations next time
   migrations: [],
-});
+  seeds: [UserSeeder],
+  seedTracking: false,
+  factories: [SetUserFactory],
+};
+
+const AppDataSource = new DataSource(options);
 
 export default AppDataSource;
